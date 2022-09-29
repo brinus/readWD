@@ -1,5 +1,5 @@
-<a href="https://brinus.github.io/Pi-SP_sim/">
-  <img align="center" src="https://github.com/brinus/Pi-SP_sim/actions/workflows/docs.yml/badge.svg" />
+<a href="https://brinus.github.io/readWD/">
+  <img align="center" src="https://github.com/brinus/readWD/actions/workflows/docs.yml/badge.svg" />
 </a>
 
 # readWD
