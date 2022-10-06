@@ -58,11 +58,11 @@
 
 /**
  * @brief File header
- * 
+ *
  * @details First line of raw data is the file header.
  * It is made by a 4-byte variable: first three are "DRS", the fourt
- * is the version of the DSR.
- * 
+ * is the version of the DRS.
+ *
  */
 struct FileHeader
 {
@@ -72,10 +72,10 @@ struct FileHeader
 
 /**
  * @brief Event header
- * 
+ *
  * @details Struct to store the event header. Serial number starting with 1,
  * event date/time are 16-bit values.
- * 
+ *
  */
 struct EventHeader
 {
@@ -93,7 +93,7 @@ struct EventHeader
 
 /**
  * @brief Integration window
- * 
+ *
  * @details Simple struct to handle start and stop of the
  * integration window.
  */
@@ -104,21 +104,21 @@ struct IntegrationWindow
 };
 
 /**
- * @brief Configuration
- * 
+ * @brief Configuration struct
+ *
  * @details User defined struct to store relevant flags, infos about the run,
  * about the events, about the channels.
- * 
+ *
  */
 struct Configuration
 {
     Configuration();
-    bool firstOfRun;
-    short debug;
-    short sigWF;
-    bool subtractSine;
-    float noiseFrequency;
-    int runMode;
+    bool firstOfRun;      ///<
+    short debug;          ///< Debug flag
+    short sigWF;          ///< To select wether the waveform must be positive or negative sign
+    bool subtractSine;    ///< Flag to subtract sine noise or not
+    float noiseFrequency; ///< The noise frequency, adjustable from the configuration menu
+    int runMode;          ///< 0 for DRS, 1 for WDB
     float intRise;
     float intDecay;
     int run;
@@ -134,7 +134,7 @@ struct Configuration
 
 /**
  * @brief Configuration constructor
- * 
+ *
  */
 Configuration::Configuration()
 {
@@ -183,13 +183,13 @@ float getTimeStamp(EventHeader);
 
 /**
  * @brief Determines mean and standard deviation of pedestal
- * 
+ *
  * @details Determine standard deviation of the first 100 samples and the second 100 samples.
  * The range with the smaller standard deviation will be used to determine the pedestal for the waveform.
- * 
- * @param aWaveform 
- * @param pedestal 
- * @param stdv 
+ *
+ * @param aWaveform
+ * @param pedestal
+ * @param stdv
  */
 void getPedestal(float *aWaveform, float &pedestal, float &stdv)
 {
@@ -211,13 +211,13 @@ void getPedestal(float *aWaveform, float &pedestal, float &stdv)
 
 /**
  * @brief Determines mean and standard deviation of pedestal
- * 
+ *
  * @details Determine standard deviation of the first 100 samples and the second 100 samples.
  * The range with the smaller standard deviation will be used to determine the pedestal for the waveform.
- * 
- * @param hSignal 
- * @param pedestal 
- * @param stdv 
+ *
+ * @param hSignal
+ * @param pedestal
+ * @param stdv
  */
 void getPedestal(TH1F *hSignal, float &pedestal, float &stdv)
 {
@@ -257,14 +257,14 @@ void getPedestal(TH1F *hSignal, float &pedestal, float &stdv)
 
 /**
  * @brief Subtract sine noise from waveform
- * 
+ *
  * @details Subtract sine noise from waveform. To be further understood.
- * 
- * @param wfData 
- * @param wfTime 
- * @param ampl 
- * @param phi 
- * @param name 
+ *
+ * @param wfData
+ * @param wfTime
+ * @param ampl
+ * @param phi
+ * @param name
  */
 void subtractSineNoise(float *wfData, float *wfTime, float &ampl, float &phi, char *name = 0)
 {
@@ -311,9 +311,9 @@ void subtractSineNoise(float *wfData, float *wfTime, float &ampl, float &phi, ch
 
 /**
  * @brief Get the timestamp
- * 
+ *
  * @details Get the timestamp from the event header.
- * 
+ *
  * @param eh The event header
  * @return Returns the timestamp
  */
@@ -337,9 +337,9 @@ float getTimeStamp(EventHeader eh)
 
 /**
  * @brief Reads an event
- * 
+ *
  * @details Reads an event in parallel from any channel available.
- * 
+ *
  * @param file Input file, opened with Initialise() and the current position at the beginning of the EHDR
  * @param eh Event header at which the event will be read
  * @param wfData Waveform data at which the waveform data will be read
@@ -483,6 +483,12 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
     return 0;
 }
 
+/**
+ * @brief
+ *
+ * @param filename
+ * @return std::ifstream*
+ */
 std::ifstream *Initialise(std::string filename)
 {
     // Input: path- / filename to the .dat file to be read.
@@ -591,6 +597,12 @@ std::ifstream *Initialise(std::string filename)
     return file;
 }
 
+/**
+ * @brief Get the Integration Bounds object
+ *
+ * @param file
+ * @return int
+ */
 int GetIntegrationBounds(std::ifstream *file)
 {
     // GetIntegrationBounds:
@@ -725,15 +737,18 @@ int GetIntegrationBounds(std::ifstream *file)
     return (nEvents < gCONFIG.nSampleEvents);
 }
 
+/**
+ * @brief Read the whole file
+ *
+ * @details Read the whole .dat file and write the values to a tree. The tree gets saved to
+ * the file gCONFIG.theFile.
+ *
+ * @param file Opened .dat file. The current position is at the first event header.
+ * @return 0 on success, 1 otherwise
+ */
 int ReadFile(std::ifstream *file)
 {
-    // Read the whole dat file and write the values to a tree.
-    // The tree gets saved to the file gCONFIG.theFile.
-    // Input: - file points to the opened .dat file. The current position is at the first event header
-    //
-    // Return: returns 0 on success, 1 otherwise
-
-    int retVal = 0;
+    int retVal = 0; ///< The value to be returned
 
     // Initialise the tree
     //  1. Number of channels and leaflist description
@@ -766,6 +781,10 @@ int ReadFile(std::ifstream *file)
     float *fSineAmplitude = new float[nChannelsTot];
     float *fSinePhase = new float[nChannelsTot];
 
+    // TEST 001: New branch for trigger rate. Implement this by
+    // evaluating something similar to nEvents/elapsedTime.
+    float fTRate = 0; // TRate == T(rigger) Rate
+
     // 3. TTree itself
     TTree *theTree = new TTree("T", "WaveDREAM Tree");
     theTree->SetDirectory(gCONFIG.theFile);
@@ -780,6 +799,10 @@ int ReadFile(std::ifstream *file)
     theTree->Branch("ped", fPed, leaflistDescription.c_str());
     theTree->Branch("Stdv", fStdv, leaflistDescription.c_str());
     theTree->Branch("Threshold", fThreshold, leaflistDescription.c_str());
+
+    // TEST 001 ------------------------------
+    theTree->Branch("TRate", &fTRate);
+
     if (gCONFIG.subtractSine)
     {
         theTree->Branch("StdvRaw", fStdvRaw, leaflistDescription.c_str());
@@ -812,6 +835,11 @@ int ReadFile(std::ifstream *file)
     bool isSignal = false;
     int minBin = 0;
     float firstMin = 0;
+
+    // TEST 001 ------------------------------
+    float initTime = 0;
+    float prevTime = 0;
+
     while (not file->eof())
     {
         retVal = ReadAnEvent(file, eh, wfData, &tCell);
@@ -820,7 +848,11 @@ int ReadFile(std::ifstream *file)
         if (eh.serialNumber % 100 == 0)
         {
             std::cout << "Processing Event " << eh.serialNumber << std::endl;
-        }
+        };
+
+        // TEST 001 ------------------------------
+        initTime = getTimeStamp(eh);
+        std::cout << initTime << std::endl;
 
         // Calculate times for each channel
         for (int ch = 0; ch < nChannelsTot; ++ch)
@@ -982,7 +1014,21 @@ int ReadFile(std::ifstream *file)
             fSineAmplitude[ch] = sinAmpl;
             fSinePhase[ch] = phi;
         }
+
+        // TEST 001 ------------------------------
+        if (prevTime != initTime)
+        {
+            fTRate = 1 / (initTime - prevTime);
+        }
+        else
+        {
+            fTRate = 0;
+        }
+
         theTree->Fill();
+
+        // TEST 001 ------------------------------
+        prevTime = initTime;
     }
 
     // Clean up at the end of the file
@@ -1004,6 +1050,11 @@ int ReadFile(std::ifstream *file)
     return 0;
 }
 
+/**
+ * @brief
+ *
+ * @return int
+ */
 int Config()
 {
     int ret = 0;
@@ -1278,6 +1329,10 @@ int Config()
     return ret;
 }
 
+/**
+ * @brief
+ *
+ */
 void PrintHelp()
 {
     // Print a short help text to the screen
@@ -1296,6 +1351,13 @@ void PrintHelp()
     std::cout << std::endl;
 }
 
+/**
+ * @brief
+ *
+ * @param argc
+ * @param argv
+ * @return int
+ */
 int main(int argc, const char **argv)
 {
     // Main function called at start of the program.
