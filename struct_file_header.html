@@ -82,15 +82,23 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a3ac96500f16028acea78c19ae6f34bc3"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_file_header.html#a3ac96500f16028acea78c19ae6f34bc3">tag</a> [3]</td></tr>
+<tr class="memdesc:a3ac96500f16028acea78c19ae6f34bc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tag of the file header.  <a href="struct_file_header.html#a3ac96500f16028acea78c19ae6f34bc3">More...</a><br /></td></tr>
 <tr class="separator:a3ac96500f16028acea78c19ae6f34bc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a238e405184b7038f14a2ac6aa935095d"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_file_header.html#a238e405184b7038f14a2ac6aa935095d">version</a></td></tr>
+<tr class="memdesc:a238e405184b7038f14a2ac6aa935095d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The version of the board.  <a href="struct_file_header.html#a238e405184b7038f14a2ac6aa935095d">More...</a><br /></td></tr>
 <tr class="separator:a238e405184b7038f14a2ac6aa935095d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >File header. </p>
-<p >First line of raw data is the file header. It is made by a 4-byte variable: first three are "DRS", the fourt is the version of the DRS. </p>
+<p >First line of binary data is the file header. It is made by a 4-byte variable: the fourth one is the version of the DRS.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone" colspan="4">File header    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">'D'   </td><td class="markdownTableBodyNone">'R'   </td><td class="markdownTableBodyNone">'S'   </td><td class="markdownTableBodyNone">'2'   </td></tr>
+</table>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00067">67</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00070">70</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="a3ac96500f16028acea78c19ae6f34bc3" name="a3ac96500f16028acea78c19ae6f34bc3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3ac96500f16028acea78c19ae6f34bc3">&#9670;&nbsp;</a></span>tag</h2>
@@ -104,9 +112,11 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00069">69</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p>The tag of the file header. </p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00496">Initialise()</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00072">72</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00539">Initialise()</a>.</p>
 
 </div>
 </div>
@@ -122,9 +132,11 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00070">70</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p>The version of the board. </p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00496">Initialise()</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00073">73</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00539">Initialise()</a>.</p>
 
 </div>
 </div>
