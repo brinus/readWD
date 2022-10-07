@@ -56,30 +56,38 @@
 
 // -------------------------------- Structs ----------------------------------------
 
-/**
- * @brief File header
- *
- * @details First line of raw data is the file header.
- * It is made by a 4-byte variable: first three are "DRS", the fourt
- * is the version of the DRS.
- *
- */
+/*! @struct FileHeader
+
+    @brief File header.
+
+    @details First line of binary data is the file header.
+    It is made by a 4-byte variable: the fourth one is the version of the DRS.
+
+    File header ||||
+    -|-|-|-|
+    'D' | 'R' | 'S' | '2' |
+*/
 struct FileHeader
 {
-    char tag[3];
-    char version;
+    char tag[3];  ///< The tag of the file header.
+    char version; ///< The version of the board.
 };
 
 /*! @struct EventHeader
 
-    @brief Event header
+    @brief Event header.
 
-    @details Struct to store...
+    @details Struct to store the event header. The binary file is encoded as in the next table.
+    Serial number starts with 1, event date/time has 16-bit values.
 
-    A | B |
-    :--|:---|
-    1 | 2 |
-
+    Event header ||||
+    :--:|:---:|:---:|:---:|
+    'E' | 'H' | 'D' | 'R' |
+    Event serial number||||
+    Year|| Mont ||
+    Day|| Hour ||
+    Minute|| Second ||
+    Millisecond || Range ||
 */
 struct EventHeader
 {
@@ -95,51 +103,86 @@ struct EventHeader
     unsigned short rangeCenter;
 };
 
-/**
- * @brief Integration window
- *
- * @details Simple struct to handle start and stop of the
- * integration window.
- */
+/*! @struct IntegrationWindow
+
+    @brief Integration window.
+
+    @details Simple struct to store infos on the integration window.
+*/
 struct IntegrationWindow
 {
-    int start;
-    int stop;
+    int start; ///< Start of the integration window.
+    int stop;  ///< Stop of the integration window.
 };
 
-/**
- * @brief Configuration struct
- *
- * @details User defined struct to store relevant flags, infos about the run,
- * about the events, about the channels.
- *
- */
+/*! @struct Configuration
+
+    @brief Configuration struct.
+
+    @details Struct to store important variables.
+*/
 struct Configuration
 {
     Configuration();
-    bool firstOfRun;      ///<
-    short debug;          ///< Debug flag
-    short sigWF;          ///< To select wether the waveform must be positive or negative sign
-    bool subtractSine;    ///< Flag to subtract sine noise or not
-    float noiseFrequency; ///< The noise frequency, adjustable from the configuration menu
-    int runMode;          ///< 0 for DRS, 1 for WDB
-    float intRise;
-    float intDecay;
-    int run;
-    unsigned int nSampleEvents;
-    unsigned int nSaveEvents;
-    float cfFraction;
-    float leThreshold;
-    std::vector<unsigned int> nChannelsPerBoard;
-    std::vector<IntegrationWindow> integrationWindows;
-    std::vector<float *> timeBinWidth;
-    TFile *theFile;
+    bool firstOfRun;                                   ///< Setted true when is the first event of the run.
+                                                       ///<
+    short debug;                                       ///< Debug flag, passed as input `-d` or `--DEBUG` or setted from the configuration menu.
+                                                       ///<
+    short sigWF;                                       ///< To select wether the waveform must be positive or negative sign,
+                                                       ///< setted from the configuration menu.
+    bool subtractSine;                                 ///< Flag to subtract sine noise or not, setted from the configuration menu.
+                                                       ///<
+    float noiseFrequency;                              ///< The noise frequency, adjustable from the configuration menu.
+                                                       ///<
+    int runMode;                                       ///< 0 for DRS, 1 for WDB.
+                                                       ///<
+    float intRise;                                     ///< Number of Std.Dev. necessary to detect a signal.
+                                                       ///<
+    float intDecay;                                    ///< Number of Tau to set the @ref IntegrationWindow stop attribute.
+                                                       ///<
+    int run;                                           ///< Run number.
+                                                       ///< 
+    unsigned int nSampleEvents;                        ///< Number of samples for integration window.
+                                                       ///<
+    unsigned int nSaveEvents;                          ///< Number of Events to save Waveforms.
+                                                       ///<
+    float cfFraction;                                  ///< 
+                                                       ///<
+    float leThreshold;                                 ///<
+                                                       ///<
+    std::vector<unsigned int> nChannelsPerBoard;       ///< Number of channels for every board.
+                                                       ///<
+    std::vector<IntegrationWindow> integrationWindows; ///< Integration windows for every board.
+                                                       ///<
+    std::vector<float *> timeBinWidth;                 ///< Width of time bin for every board.
+                                                       ///<
+    TFile *theFile;                                    ///< The ROOT path/file where the results will be stored.
+                                                       ///<
 };
 
-/**
- * @brief Configuration constructor
- *
- */
+/*! @brief @ref Configuration constructor
+
+    @details Every new @ref Configuration variable is initialized as follows:
+    @code{.cpp}
+    Configuration::Configuration()
+    {
+        debug = 0;
+        firstOfRun = true;
+        sigWF = -1;
+        subtractSine = false;
+        noiseFrequency = 50.6e+6 * TMath::TwoPi();
+        runMode = 1;
+        cfFraction = 0.2;
+        leThreshold = 0.05;
+        run = 0;
+        nSampleEvents = 2000;
+        nSaveEvents = 0;
+        theFile = 0;
+        intRise = 6;
+        intDecay = 3;
+    }    
+    @endcode
+*/
 Configuration::Configuration()
 {
     debug = 0;
