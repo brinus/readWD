@@ -3,7 +3,7 @@
 </a>
 
 # readWD
-Cpp script to read raw data from DRS Evaluation Board. To run the script you must first compile it:
+Cpp script to read raw data from DRS Evaluation Board and WaveDream Board. To run the script you must first compile it:
 ```
  $ make
  $ ./readWD

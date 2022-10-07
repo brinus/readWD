@@ -75,7 +75,10 @@ struct FileHeader
  *
  * @details Struct to store the event header. Serial number starting with 1,
  * event date/time are 16-bit values.
- *
+ * A | B
+ * -----
+ * 1 | 2
+ * 
  */
 struct EventHeader
 {
