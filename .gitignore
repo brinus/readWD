@@ -37,3 +37,4 @@ readWD
 readWD.o
 output.dat
 output.root
+test*
