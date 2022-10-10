@@ -141,12 +141,12 @@ struct Configuration
     float intDecay;                                    ///< Number of Tau to set the @ref IntegrationWindow stop attribute.
                                                        ///<
     int run;                                           ///< Run number.
-                                                       ///< 
+                                                       ///<
     unsigned int nSampleEvents;                        ///< Number of samples for integration window.
                                                        ///<
     unsigned int nSaveEvents;                          ///< Number of Events to save Waveforms.
                                                        ///<
-    float cfFraction;                                  ///< 
+    float cfFraction;                                  ///<
                                                        ///<
     float leThreshold;                                 ///<
                                                        ///<
@@ -180,7 +180,7 @@ struct Configuration
         theFile = 0;
         intRise = 6;
         intDecay = 3;
-    }    
+    }
     @endcode
 */
 Configuration::Configuration()
@@ -424,7 +424,9 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
             eventSize += 4 * gCONFIG.nChannelsPerBoard.size(); // 4 byte board header per board
             int nChannelsTot = 0;
             for (int nCh : gCONFIG.nChannelsPerBoard)
+            {
                 nChannelsTot += nCh;
+            }
 
             // 4 Byte channel header, 4 byte scaler, 4 byte Trigger header + data
             eventSize += (12 + sizeof(voltages)) * nChannelsTot;
@@ -456,7 +458,7 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
     file->read((char *)&eh, sizeof(eh));
     if (std::memcmp(eh.tag, "EHDR", 4) != 0)
     {
-        std::cerr << "!! no valid event header found. Found " << eh.tag << "instead" << std::endl;
+        std::cerr << "!! no valid event header found. Found " << eh.tag << " instead" << std::endl;
         return 2;
     }
     DEBUG << "Reading event " << eh.serialNumber << std::endl;
@@ -467,7 +469,7 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
         file->read(word, 4);
         if (std::memcmp(word, "B#", 2) != 0)
         {
-            std::cerr << "!! No valid board header found. Found " << word << "instead" << std::endl;
+            std::cerr << "No valid board header found. Found " << word << " instead" << std::endl;
             return 2;
         }
         DEBUG << " -found data for board " << *(short *)(word + 2) << std::endl;
@@ -478,7 +480,7 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
             file->read(word, 4);
             if (std::memcmp(word, "T#", 2) != 0)
             {
-                std::cerr << "No valid trigger cell found. Found " << word << "instead" << std::endl;
+                std::cerr << "No valid trigger cell found. Found " << word << " instead" << std::endl;
                 return 2;
             }
             DEBUG << "Trigger cell: " << *(unsigned short *)(word + 2) << std::endl;
@@ -508,7 +510,7 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
                 file->read(word, 4);
                 if (std::memcmp(word, "T#", 2) != 0)
                 {
-                    std::cerr << "No valid trigger cell found. Found " << word << "instead" << std::endl;
+                    std::cerr << "No valid trigger cell found. Found " << word << " instead" << std::endl;
                     return 2;
                 }
                 DEBUG << "Trigger cell: " << *(unsigned short *)(word + 2) << std::endl;
@@ -517,7 +519,7 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
             }
 
             // Read voltages from file
-            file->read((char *)voltages, sizeof voltages);
+            file->read((char *)voltages, sizeof(voltages));
 
             // Transfere the voltages to the wfData
             for (int bin = 0; bin < SAMPLES_PER_WAVEFORM; ++bin)
@@ -639,8 +641,45 @@ std::ifstream *Initialise(std::string filename)
         return 0;
     }
 
-    // The position in the std::ifstream should be at the beginning of the EHDR
     file->seekg(-4, file->cur);
+
+    long curPos = file->tellg();
+
+    // Check the actual number of channels in any board
+    // TO BE TESTED
+    EventHeader eh;
+    file->read((char *)&eh, sizeof(eh));
+    if (std::memcmp(eh.tag, "EHDR", 4) != 0)
+    {
+        std::cerr << "No valid event header found. Found " << eh.tag << " instead" << std::endl;
+        return 0;
+    }
+    for (unsigned int board = 0; board < gCONFIG.nChannelsPerBoard.size(); board++)
+    {
+        file->seekg(4, file->cur);
+        if (gCONFIG.runMode == 0)
+        {
+            file->seekg(4, file->cur);
+        }
+        for (unsigned int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ch++)
+        {
+            file->read(word, 4);
+            if (word[0] != 'C')
+            {
+                if (std::memcmp(word, "EHDR", 4) != 0)
+                {
+                    return 0;
+                }
+                else
+                {
+                    gCONFIG.nChannelsPerBoard.at(board) = ch;
+                }
+            }
+            file->seekg(sizeof(unsigned short) * SAMPLES_PER_WAVEFORM + 8, file->cur);
+        }
+    }
+
+    file->seekg(curPos);
     return file;
 }
 
@@ -899,7 +938,6 @@ int ReadFile(std::ifstream *file)
 
         // TEST 001 ------------------------------
         initTime = getTimeStamp(eh);
-        std::cout << initTime << std::endl;
 
         // Calculate times for each channel
         for (int ch = 0; ch < nChannelsTot; ++ch)
