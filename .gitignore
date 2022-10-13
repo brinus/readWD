@@ -33,6 +33,7 @@
 
 # Others
 .DS_Store
+.vscode
 readWD
 readWD.o
 output.dat
