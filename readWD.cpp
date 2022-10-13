@@ -214,18 +214,13 @@ Configuration gCONFIG;
 
 // -------------------------------- Declarations -----------------------------------
 
-std::ifstream *Initialise(std::string); // nChannelsPerBoard, time header
+std::ifstream *Initialise(std::string);
 int GetIntegrationBounds(std::ifstream *);
-int ReadAnEvent(std::ifstream *, EventHeader &, std::vector<std::vector<float *>> &, std::vector<std::vector<unsigned short>> *); // Read one event
-int ReadFile(std::ifstream *);                                                                                                    // Read all events and fill to a tree
+int ReadAnEvent(std::ifstream *, EventHeader &, std::vector<std::vector<float *>> &, std::vector<std::vector<unsigned short>> *);
+int ReadFile(std::ifstream *);
 int Config();
 void PrintHelp();
 void subtractSineNoise(float *, float *, float &, float &, char *);
-void getPedestal(float *, float &, float &);
-void getPedestal(TH1F *, float &, float &);
-float getTimeStamp(EventHeader);
-
-// ------------------------------ Functions -----------------------------------------
 
 /**
  * @brief Determines mean and standard deviation of pedestal
@@ -237,6 +232,23 @@ float getTimeStamp(EventHeader);
  * @param pedestal
  * @param stdv
  */
+void getPedestal(float *, float &, float &);
+
+/**
+ * @brief Determines mean and standard deviation of pedestal
+ *
+ * @details Determine standard deviation of the first 100 samples and the second 100 samples.
+ * The range with the smaller standard deviation will be used to determine the pedestal for the waveform.
+ *
+ * @param hSignal
+ * @param pedestal
+ * @param stdv
+ */
+void getPedestal(TH1F *, float &, float &);
+float getTimeStamp(EventHeader);
+
+// ------------------------------ Functions -----------------------------------------
+
 void getPedestal(float *aWaveform, float &pedestal, float &stdv)
 {
     pedestal = 0;
@@ -255,16 +267,6 @@ void getPedestal(float *aWaveform, float &pedestal, float &stdv)
     }
 }
 
-/**
- * @brief Determines mean and standard deviation of pedestal
- *
- * @details Determine standard deviation of the first 100 samples and the second 100 samples.
- * The range with the smaller standard deviation will be used to determine the pedestal for the waveform.
- *
- * @param hSignal
- * @param pedestal
- * @param stdv
- */
 void getPedestal(TH1F *hSignal, float &pedestal, float &stdv)
 {
     pedestal = stdv = 0;
