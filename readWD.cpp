@@ -34,7 +34,7 @@
 
 // -------------------------------- Includes ---------------------------------------
 
-// standard libraries
+// Standard libraries
 #include <curses.h>
 #include <fstream>
 #include <iostream>
@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <vector>
 
-// root libraries
+// Root libraries
 #include <TF1.h>
 #include <TFile.h>
 #include <TGraph.h>
@@ -154,7 +154,7 @@ struct Configuration
                                                        ///<
     std::vector<IntegrationWindow> integrationWindows; ///< Integration windows for every board.
                                                        ///<
-    std::vector<float *> timeBinWidth;                 ///< Width of time bin for every board.
+    std::vector<std::vector<float *>> timeBinWidth;    ///< Width of time bin for every board.
                                                        ///<
     TFile *theFile;                                    ///< The ROOT path/file where the results will be stored.
                                                        ///<
@@ -190,7 +190,6 @@ Configuration::Configuration()
     sigWF = -1;
     subtractSine = false;
     noiseFrequency = 50.6e+6 * TMath::TwoPi();
-    // runMode: 0 - DRS, 1 - WDB
     runMode = 1;
     cfFraction = 0.2;
     leThreshold = 0.05;
@@ -217,8 +216,8 @@ Configuration gCONFIG;
 
 std::ifstream *Initialise(std::string); // nChannelsPerBoard, time header
 int GetIntegrationBounds(std::ifstream *);
-int ReadAnEvent(std::ifstream *, EventHeader &, std::vector<float *> &, std::vector<unsigned short> *); // Read one event
-int ReadFile(std::ifstream *);                                                                          // Read all events and fill to a tree
+int ReadAnEvent(std::ifstream *, EventHeader &, std::vector<std::vector<float *>> &, std::vector<std::vector<unsigned short>> *); // Read one event
+int ReadFile(std::ifstream *);                                                                                                    // Read all events and fill to a tree
 int Config();
 void PrintHelp();
 void subtractSineNoise(float *, float *, float &, float &, char *);
@@ -383,6 +382,273 @@ float getTimeStamp(EventHeader eh)
 }
 
 /**
+ * @brief
+ *
+ * @param filename
+ * @return std::ifstream*
+ */
+std::ifstream *Initialise(std::string filename)
+{
+    unsigned int nBoards = 1;
+    unsigned int board = 0;
+    float *times = 0;
+    char word[5];
+    word[4] = '\0';
+    std::ifstream *file = new std::ifstream;
+    file->open(filename, std::ios::in | std::ios::binary);
+
+    // Reset the configuration
+    gCONFIG.firstOfRun = true;
+    gCONFIG.nChannelsPerBoard.resize(0);
+    gCONFIG.integrationWindows.resize(0);
+    gCONFIG.timeBinWidth.resize(0);
+
+    // Return if unable to open the file
+    if (!file->is_open())
+    {
+        std::cerr << "!! Could not open file " << filename << std::endl;
+        delete file;
+        return 0;
+    }
+
+    FileHeader fh;
+    file->read((char *)&fh, sizeof(fh));
+
+    // Check file header
+    if (std::memcmp(fh.tag, "DRS", 3) != 0)
+    {
+        std::cerr << "!! No suitable file hedaer in file " << filename << std::endl;
+        file->close();
+        delete file;
+        return 0;
+    }
+    if (fh.version - '0' < 8)
+    {
+        gCONFIG.runMode = 0; // DRS
+        std::cout << "DRS Version " << fh.version << " : DRS Board" << std::endl;
+    }
+    else
+    {
+        gCONFIG.runMode = 1; // WDB
+        std::cout << "DRS Version " << fh.version << " : WDB encoding" << std::endl;
+    }
+
+    // Skip the time 'TIME' header
+    file->seekg(4, file->cur);
+    file->read(word, 4);
+
+    // Check board number
+    if (word[0] != 'B')
+    {
+        std::cerr << "!! No board header found in file " << filename << std::endl;
+        file->close();
+        delete file;
+        return 0;
+    }
+    std::cout << "Board 1: " << word[0] << word[1] << *(short *)(word + 2) << std::endl;
+    gCONFIG.nChannelsPerBoard.push_back(0);
+    gCONFIG.timeBinWidth.push_back({});
+    while (word[0] == 'C' || word[0] == 'B')
+    {
+        file->read(word, 4);
+        if (word[0] == 'C')
+        {
+            // Channel
+            gCONFIG.nChannelsPerBoard.at(board) += 1;
+            times = new float[SAMPLES_PER_WAVEFORM];
+            file->read((char *)times, sizeof(float) * SAMPLES_PER_WAVEFORM);
+            gCONFIG.timeBinWidth.at(board).push_back(times);
+        }
+        else if (word[0] == 'B')
+        {
+            // Board
+            gCONFIG.nChannelsPerBoard.push_back(0);
+            gCONFIG.timeBinWidth.push_back({});
+            ++board;
+            ++nBoards;
+            std::cout << "Board " << nBoards << ": " << word[0] << word[1] << *(short *)(word + 2) << std::endl;
+        }
+    }
+
+    // Check for event header
+    if (strcmp(word, "EHDR") != 0)
+    {
+        std::cerr << "!! No event header found: Expected EHDR, got " << word << std::endl;
+        Debug << "Cleaning up ... " << std::endl;
+        file->close();
+        for (board = 0; board < gCONFIG.timeBinWidth.size(); ++board)
+        {
+            for (float *arr : gCONFIG.timeBinWidth.at(board))
+                delete[] arr;
+        }
+        delete file;
+        return 0;
+    }
+
+    file->seekg(-4, file->cur);
+    return file;
+}
+
+/**
+ * @brief Get the Integration Bounds object
+ *
+ * @param file
+ * @return int
+ */
+int GetIntegrationBounds(std::ifstream *file)
+{
+    int nChannelsTot = 0;
+    char name[32];
+    for (int nChannelsAtBoard : gCONFIG.nChannelsPerBoard)
+    {
+        nChannelsTot += nChannelsAtBoard;
+    }
+
+    // Create SampleSignal histograms
+    std::vector<TH1F **> hSampleSig;
+    for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); board++)
+    {
+        hSampleSig.push_back(new TH1F *[gCONFIG.nChannelsPerBoard.at(board)]);
+        for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+        {
+            sprintf(name, "hSampleSigB%03dC%03d", board + 1, ch);
+            hSampleSig.at(board)[ch] = new TH1F(name, name, SAMPLES_PER_WAVEFORM, -0.5, SAMPLES_PER_WAVEFORM - 0.5);
+
+            // Attribute the histos with the root output file. Memory will be freed when closing the file
+            hSampleSig.at(board)[ch]->SetDirectory(gCONFIG.theFile);
+            Debug << "Created histogram " << name << std::endl;
+        }
+    }
+
+    // Read some data and fill the histos
+    EventHeader eh;
+    std::vector<std::vector<float *>> wfData;
+    for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); board++)
+    {
+        wfData.push_back({});
+        for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+            wfData.at(board).push_back(new float[SAMPLES_PER_WAVEFORM]);
+    }
+    float pedestal = 0;
+    float pedStdv = 0;
+    unsigned int nEvents = 0;
+    int retVal = 0;
+    std::cout << "Position at begin of GetIntegrationBounds: " << file->tellg() << std::endl;
+    int curPos = file->tellg();
+    while (nEvents < gCONFIG.nSampleEvents && !file->eof())
+    {
+        retVal = ReadAnEvent(file, eh, wfData, 0);
+        if (retVal)
+            break;
+        for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); board++)
+        {
+            for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+            {
+                getPedestal(wfData.at(board).at(ch), pedestal, pedStdv);
+                for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
+                {
+                    hSampleSig.at(board)[ch]->Fill(i, wfData.at(board).at(ch)[i] - pedestal);
+                }
+            }
+        }
+    }
+
+    std::cout << "GIB while cycle passed" << std::endl;
+
+    if (retVal < 2)
+    {
+        float peak, stdv, tau;
+        int peakBin;
+        TH1F *hSample = 0;
+        TF1 *gaus = new TF1("gaus", "gaus(0)");
+        TF1 *decay = new TF1("decay", "[0] * exp( -(x - [1]) / [2])");
+        TF1 *intWin = new TF1("intWindow", "[0]");
+        intWin->SetLineColor(419);
+        intWin->SetLineWidth(3);
+        IntegrationWindow iw;
+        std::cout << "Integration Windows:\nCh\tstart\tstop\n";
+        // Fit the samples if reasonable
+        for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
+        {
+            for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+            {
+                hSample = hSampleSig.at(board)[ch];
+                hSample->GetXaxis()->SetRange(2, 0.9 * SAMPLES_PER_WAVEFORM);
+                peak = hSample->GetMinimum();
+                peakBin = hSample->GetMinimumBin();
+                hSample->GetXaxis()->SetRange(1, SAMPLES_PER_WAVEFORM);
+                getPedestal(hSample, pedestal, pedStdv);
+                Debug << "peak : " << peak << " bin: " << peakBin << std::endl;
+                if (peak < pedestal - 5 * pedStdv)
+                {
+                    // There is at least a five sigma excess
+                    // This channel probably collected a waveform
+                    decay->FixParameter(0, peak);
+                    decay->FixParameter(1, peakBin);
+                    decay->SetParameter(2, 10);
+                    decay->SetRange(peakBin, 1000);
+                    hSample->Fit(decay, "RQ0");
+                    hSample->GetFunction("decay")->ResetBit(TF1::kNotDraw);
+                    gaus->FixParameter(0, peak);
+                    gaus->FixParameter(1, peakBin);
+                    gaus->SetParameter(2, 10);
+                    gaus->SetRange(1, peakBin);
+                    hSample->Fit(gaus, "RQ0+");
+                    hSample->GetFunction("gaus")->ResetBit(TF1::kNotDraw);
+                    stdv = fabs(gaus->GetParameter(2));
+                    tau = fabs(decay->GetParameter(2));
+                    iw.start = peakBin - gCONFIG.intRise * stdv;
+                    iw.stop = peakBin + gCONFIG.intDecay * tau;
+                    if (iw.start < 0)
+                        iw.start = 0;
+                    if (iw.stop > SAMPLES_PER_WAVEFORM - 1)
+                        iw.stop = SAMPLES_PER_WAVEFORM - 1;
+                }
+                else
+                {
+                    // There is probably no signal - integrate over the whole time window
+                    iw.start = 0;
+                    iw.stop = SAMPLES_PER_WAVEFORM - 1;
+                }
+                intWin->SetRange(iw.start, iw.stop);
+                intWin->FixParameter(0, pedestal);
+                if (pedestal != 0)
+                {
+                    hSample->Fit(intWin, "RQ0+");
+                    hSample->GetFunction("intWindow")->ResetBit(TF1::kNotDraw);
+                }
+                gCONFIG.integrationWindows.push_back(iw);
+                std::printf("%d\t%d\t%d\n", ch, iw.start, iw.stop);
+            }
+        }
+
+        // Deleting the functions
+        gaus->Delete();
+        decay->Delete();
+        intWin->Delete();
+    }
+
+    // Clean up
+    for (std::vector<float *> ch : wfData)
+    {
+        for (float *f : ch)
+            delete[] f;
+    }
+    for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
+    {
+        for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+        {
+            hSampleSig.at(board)[ch]->Write("", TObject::kOverwrite);
+        }
+        delete[] hSampleSig.at(board);
+    }
+
+    // Return 1 if eof was reached, 0 when nSampleEvents were read
+    file->seekg(curPos);
+    return (nEvents < gCONFIG.nSampleEvents);
+}
+
+/**
  * @brief Reads an event
  *
  * @details Reads an event in parallel from any channel available.
@@ -393,7 +659,7 @@ float getTimeStamp(EventHeader eh)
  * @param tCell Trigger cell
  * @return 0 on success, 1 for EOF, 2 otherwise
  */
-int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfData, std::vector<unsigned short> *tCell)
+int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<std::vector<float *>> &wfData, std::vector<std::vector<unsigned short>> *tCell)
 {
     // Input: file - std::ifstream opened with Initialise() and the current position at the beginning of the EHDR.
     //        eh - to this variable the event header will be read
@@ -417,53 +683,20 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
         file->seekg(0, file->end);
         lastPos = file->tellg();
         file->seekg(curPos);
-        if (gCONFIG.runMode == 1)
-        {
-            // WDB event encoding
-            eventSize += sizeof(EventHeader);                  // 1 Event header
-            eventSize += 4 * gCONFIG.nChannelsPerBoard.size(); // 4 byte board header per board
-            int nChannelsTot = 0;
-            for (int nCh : gCONFIG.nChannelsPerBoard)
-            {
-                nChannelsTot += nCh;
-            }
-
-            // 4 Byte channel header, 4 byte scaler, 4 byte Trigger header + data
-            eventSize += (12 + sizeof(voltages)) * nChannelsTot;
-        }
-        else
-        {
-            // DRS event encoding
-            eventSize += sizeof(EventHeader);                  // 1 Event header
-            eventSize += 8 * gCONFIG.nChannelsPerBoard.size(); // 4 byte board header per board + trigger header
-            int nChannelsTot = 0;
-            for (int nCh : gCONFIG.nChannelsPerBoard)
-                nChannelsTot += nCh;
-
-            // 4 Byte channel header, 4 byte scaler + data
-            eventSize += (8 + sizeof(voltages)) * nChannelsTot;
-        }
         gCONFIG.firstOfRun = false;
-    }
-    DEBUG << "File status: " << file->tellg() << "/" << lastPos << "  Event Size: " << eventSize << std::endl;
-
-    // Assert that the file is not at its end
-    if (lastPos - file->tellg() < eventSize)
-    {
-        DEBUG << "File is at its end: " << file->tellg() << "/" << lastPos << "   Event Size: " << eventSize << std::endl;
-        return 1;
     }
 
     // Read event header first
     file->read((char *)&eh, sizeof(eh));
     if (std::memcmp(eh.tag, "EHDR", 4) != 0)
     {
-        std::cerr << "!! no valid event header found. Found " << eh.tag << " instead" << std::endl;
+        std::cerr << "!! No valid event header found. Found " << eh.tag << " instead" << std::endl;
         return 2;
     }
     DEBUG << "Reading event " << eh.serialNumber << std::endl;
 
     // Looping over all channels and all boards
+    int totCh = 0;
     for (unsigned int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
     {
         file->read(word, 4);
@@ -486,26 +719,24 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
             DEBUG << "Trigger cell: " << *(unsigned short *)(word + 2) << std::endl;
             if (tCell)
             {
-                for (unsigned int i = 0; i < tCell->size(); ++i)
-                    tCell->at(i) = *(unsigned short *)(word + 2);
+                for (unsigned int i = 0; i < tCell->at(board).size(); ++i)
+                    tCell->at(board).at(i) = *(unsigned short *)(word + 2);
             }
         }
-        for (unsigned int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+        file->read(word, 4);
+        while (word[0] == 'C')
         {
-            // Read channel header
-            file->read(word, 4);
-            if (word[0] != 'C')
-            {
-                std::cerr << "No valiad channel header found. Found " << word << "instead" << std::endl;
-                return 2;
-            }
+            ++totCh;
+            char iCh[10];
+            std::memcpy(iCh, word + 1, 3);
+            iCh[3] = 0;
+            index = std::stoi(iCh);
             DEBUG << "Found data for channel " << word << std::endl;
 
             // Read scaler - and ignore it for now
             file->read(word, 4);
             if (gCONFIG.runMode == 1)
             {
-
                 // Read trigger cell
                 file->read(word, 4);
                 if (std::memcmp(word, "T#", 2) != 0)
@@ -515,312 +746,72 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<float *> &wfDa
                 }
                 DEBUG << "Trigger cell: " << *(unsigned short *)(word + 2) << std::endl;
                 if (tCell)
-                    tCell->at(index) = *(unsigned short *)(word + 2);
+                    tCell->at(board).at(index) = *(unsigned short *)(word + 2);
             }
 
             // Read voltages from file
+            int curPos = file->tellg();
             file->read((char *)voltages, sizeof(voltages));
 
-            // Transfere the voltages to the wfData
             for (int bin = 0; bin < SAMPLES_PER_WAVEFORM; ++bin)
             {
-                wfData.at(index)[bin] = (voltages[bin] / 65536. + eh.rangeCenter / 1000. - 0.5);
+                wfData.at(board).at(index)[bin] = (voltages[bin] / 65536. + eh.rangeCenter / 1000. - 0.5);
             }
-            ++index;
+            if (curPos + sizeof(float) * SAMPLES_PER_WAVEFORM < file->end)
+            {
+                file->read(word, 4);
+                file->seekg(-4, file->cur);
+            }
         }
     }
-    return 0;
-}
 
-/**
- * @brief
- *
- * @param filename
- * @return std::ifstream*
- */
-std::ifstream *Initialise(std::string filename)
-{
-    // Input: path- / filename to the .dat file to be read.
-    //        timeBinWidth: a std::vector to contain the time width of each bin
-    // Return: open std::ifstream at position of first event header in case of success
-    // Return: NULL-pointer in case of failure.
-    // Further initialise:
-    // 		- nChannelsPerBoard
-    //		- timeBinWidth
-    //		- integrationWindows (in case runMode >= 1)
-
-    unsigned int nBoards = 1;
-    unsigned int board = 0;
-    float *times = 0;
-    char word[5];
-    word[4] = '\0';
-    std::ifstream *file = new std::ifstream;
-    file->open(filename, std::ios::in | std::ios::binary);
-
-    // Reset the configurations
-    gCONFIG.firstOfRun = true;
-    gCONFIG.nChannelsPerBoard.resize(0);
-    gCONFIG.integrationWindows.resize(0);
-    gCONFIG.timeBinWidth.resize(0);
-
-    // Return if unable to open the file
-    if (!file->is_open())
+    for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
     {
-        std::cerr << "!! Could not open file " << filename << std::endl;
-        delete file;
-        return 0;
+        for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+        {
+            if (wfData.at(board).at(ch)[0] == 0)
+            {
+                for (int bin = 0; bin < SAMPLES_PER_WAVEFORM; ++bin)
+                    wfData.at(board).at(ch)[bin] = -1.;
+            }
+        }
     }
-    FileHeader fh;
-    file->read((char *)&fh, sizeof(fh));
 
-    // Check file header
-    if (fh.tag[0] != 'D' || fh.tag[1] != 'R' || fh.tag[2] != 'S')
+    // if (std::memcmp(word, "EHDR", 4) != 0)
+    // {
+    //     std::cerr << "No valid channel header or event header found. Found " << word << " instead" << std::endl;
+    //     return 2;
+    // }
+    eventSize = 0;
+    if (gCONFIG.runMode == 1)
     {
-        std::cerr << "!! No suitable file header in file " << filename << std::endl;
-        file->close();
-        delete file;
-        return 0;
-    }
-    if (fh.version - '0' < 8)
-    {
-        // It is a DRS board
-        gCONFIG.runMode = 0;
-        std::cout << "DRS Version " << fh.version << " : DRS Board" << std::endl;
+        // WDB event encoding
+        eventSize += sizeof(EventHeader);                  // 1 Event header
+        eventSize += 4 * gCONFIG.nChannelsPerBoard.size(); // 4 byte board header per board
+
+        // 4 Byte channel header, 4 byte scaler, 4 byte Trigger header + data
+        eventSize += (12 + sizeof(voltages)) * totCh;
     }
     else
     {
-        // It is a WDB
-        gCONFIG.runMode = 1;
-        std::cout << "DRS Version " << fh.version << " : WDB encoding" << std::endl;
+        // DRS event encoding
+        eventSize += sizeof(EventHeader);                  // 1 Event header
+        eventSize += 8 * gCONFIG.nChannelsPerBoard.size(); // 4 byte board header per board + trigger header
+
+        // 4 Byte channel header, 4 byte scaler + data
+        eventSize += (8 + sizeof(voltages)) * totCh;
     }
 
-    // Skip the 'TIME' time header
-    file->seekg(4, file->cur);
-    file->read(word, 4);
+    DEBUG << "File status: " << file->tellg() << "/" << lastPos << "  Event Size: " << eventSize << std::endl;
 
-    if (word[0] != 'B')
+    // Assert that the file is not at its end
+    if (lastPos - file->tellg() < eventSize)
     {
-        std::cerr << "!! No board header found in file " << filename << std::endl;
-        file->close();
-        delete file;
-        return 0;
-    }
-    std::cout << "Board 1: " << word[0] << word[1] << *(short *)(word + 2) << std::endl;
-    gCONFIG.nChannelsPerBoard.push_back(0);
-    while (word[0] == 'C' || word[0] == 'B')
-    {
-        file->read(word, 4);
-        if (word[0] == 'C')
-        {
-            // It's a channel
-            std::cout << " -> " << word << std::endl;
-            gCONFIG.nChannelsPerBoard.at(board) += 1;
-            times = new float[SAMPLES_PER_WAVEFORM];
-            file->read((char *)times, sizeof(float) * SAMPLES_PER_WAVEFORM);
-            gCONFIG.timeBinWidth.push_back(times);
-        }
-        else if (word[0] == 'B')
-        {
-            ++board;
-            ++nBoards;
-            std::cout << "Board " << nBoards << ": " << word[0] << word[1] << *(short *)(word + 2) << std::endl;
-        }
+        DEBUG << "File is at its end: " << file->tellg() << "/" << lastPos << "   Event Size: " << eventSize << std::endl;
+        return 1;
     }
 
-    // Now an event header should have been read
-    if (word[0] != 'E' || word[1] != 'H' || word[2] != 'D' || word[3] != 'R')
-    {
-        std::cerr << "!! Event header not found: Expected EHDR, got " << word << std::endl;
-        Debug << "Cleaning up ... " << std::endl;
-        file->close();
-        for (board = 0; board < gCONFIG.timeBinWidth.size(); ++board)
-        {
-            delete[] gCONFIG.timeBinWidth.at(board);
-        }
-        delete file;
-        return 0;
-    }
-
-    file->seekg(-4, file->cur);
-
-    long curPos = file->tellg();
-
-    // Check the actual number of channels in any board
-    // TO BE TESTED
-    EventHeader eh;
-    file->read((char *)&eh, sizeof(eh));
-    if (std::memcmp(eh.tag, "EHDR", 4) != 0)
-    {
-        std::cerr << "No valid event header found. Found " << eh.tag << " instead" << std::endl;
-        return 0;
-    }
-    for (unsigned int board = 0; board < gCONFIG.nChannelsPerBoard.size(); board++)
-    {
-        file->seekg(4, file->cur);
-        if (gCONFIG.runMode == 0)
-        {
-            file->seekg(4, file->cur);
-        }
-        for (unsigned int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ch++)
-        {
-            file->read(word, 4);
-            if (word[0] != 'C')
-            {
-                if (std::memcmp(word, "EHDR", 4) != 0)
-                {
-                    return 0;
-                }
-                else
-                {
-                    gCONFIG.nChannelsPerBoard.at(board) = ch;
-                }
-            }
-            file->seekg(sizeof(unsigned short) * SAMPLES_PER_WAVEFORM + 8, file->cur);
-        }
-    }
-
-    file->seekg(curPos);
-    return file;
-}
-
-/**
- * @brief Get the Integration Bounds object
- *
- * @param file
- * @return int
- */
-int GetIntegrationBounds(std::ifstream *file)
-{
-    // GetIntegrationBounds:
-    // Input: std::ifstream pointing to the .dat file at the beginning of the first EHDR
-    // Determines the integration windows (bins)
-    // Writes the Sample Signal Histos to the open root file
-
-    // Current position in the std::ifstream to restore later
-    int currentPos = file->tellg();
-
-    // Create SampleSignal histograms
-    int nChannelsTot = 0;
-    char name[32];
-    for (int i : gCONFIG.nChannelsPerBoard)
-        nChannelsTot += i;
-    TH1F **hSampleSig = new TH1F *[nChannelsTot];
-    for (int ch = 0; ch < nChannelsTot; ++ch)
-    {
-        sprintf(name, "hSampleSig%03d", ch);
-        hSampleSig[ch] = new TH1F(name, name, SAMPLES_PER_WAVEFORM, -0.5, SAMPLES_PER_WAVEFORM - 0.5);
-
-        // Attribute the histos with the root output file. Memory will be freed when closing the file
-        hSampleSig[ch]->SetDirectory(gCONFIG.theFile);
-        Debug << "Created histogram " << name << std::endl;
-    }
-
-    // Read some data and fill the histos
-    EventHeader eh;
-    std::vector<float *> wfData;
-    wfData.resize(nChannelsTot, 0);
-    for (int i = 0; i < nChannelsTot; ++i)
-        wfData.at(i) = new float[SAMPLES_PER_WAVEFORM];
-    float pedestal = 0;
-    float pedStdv = 0;
-    unsigned int nEvents = 0;
-    int retVal = 0;
-    while (nEvents < gCONFIG.nSampleEvents && !file->eof())
-    {
-        retVal = ReadAnEvent(file, eh, wfData, 0);
-        if (retVal)
-            break;
-        for (int ch = 0; ch < nChannelsTot; ++ch)
-        {
-            getPedestal(wfData.at(ch), pedestal, pedStdv);
-            for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
-            {
-                hSampleSig[ch]->Fill(i, wfData.at(ch)[i] - pedestal);
-            }
-        }
-    }
-    if (retVal < 2)
-    {
-        float peak, stdv, tau;
-        int peakBin;
-        TH1F *hSample = 0;
-        TF1 *gaus = new TF1("gaus", "gaus(0)");
-        TF1 *decay = new TF1("decay", "[0] * exp( -(x - [1]) / [2])");
-        TF1 *intWin = new TF1("intWindow", "[0]");
-        intWin->SetLineColor(419);
-        intWin->SetLineWidth(3);
-        IntegrationWindow iw;
-        std::cout << "Integration Windows:\nCh\tstart\tstop\n";
-
-        // Fit the samples if reasonable
-        for (int ch = 0; ch < nChannelsTot; ++ch)
-        {
-            hSample = hSampleSig[ch];
-            hSample->GetXaxis()->SetRange(2, 0.9 * SAMPLES_PER_WAVEFORM);
-            peak = hSample->GetMinimum();
-            peakBin = hSample->GetMinimumBin();
-            hSample->GetXaxis()->SetRange(1, SAMPLES_PER_WAVEFORM);
-            getPedestal(hSample, pedestal, pedStdv);
-            Debug << "peak : " << peak << " bin: " << peakBin << std::endl;
-            if (peak < pedestal - 5 * pedStdv)
-            {
-                // There is at least a five sigma excess
-                // This channel probably collected a waveform
-                decay->FixParameter(0, peak);
-                decay->FixParameter(1, peakBin);
-                decay->SetParameter(2, 10);
-                decay->SetRange(peakBin, 1000);
-                hSample->Fit(decay, "RQ0");
-                hSample->GetFunction("decay")->ResetBit(TF1::kNotDraw);
-                gaus->FixParameter(0, peak);
-                gaus->FixParameter(1, peakBin);
-                gaus->SetParameter(2, 10);
-                gaus->SetRange(1, peakBin);
-                hSample->Fit(gaus, "RQ0+");
-                hSample->GetFunction("gaus")->ResetBit(TF1::kNotDraw);
-                stdv = fabs(gaus->GetParameter(2));
-                tau = fabs(decay->GetParameter(2));
-                iw.start = peakBin - gCONFIG.intRise * stdv;
-                iw.stop = peakBin + gCONFIG.intDecay * tau;
-                if (iw.start < 0)
-                    iw.start = 0;
-                if (iw.stop > SAMPLES_PER_WAVEFORM - 1)
-                    iw.stop = SAMPLES_PER_WAVEFORM - 1;
-            }
-            else
-            {
-                // There is probably no signal - integrate over the whole time window
-                iw.start = 0;
-                iw.stop = SAMPLES_PER_WAVEFORM - 1;
-            }
-            intWin->SetRange(iw.start, iw.stop);
-            intWin->FixParameter(0, pedestal);
-            hSample->Fit(intWin, "RQ0+");
-            hSample->GetFunction("intWindow")->ResetBit(TF1::kNotDraw);
-            gCONFIG.integrationWindows.push_back(iw);
-            std::printf("%d\t%d\t%d\n", ch, iw.start, iw.stop);
-        }
-
-        // Deleting the functions
-        gaus->Delete();
-        decay->Delete();
-        intWin->Delete();
-    }
-
-    // Restore position in std::ifstream
-    file->seekg(currentPos);
-
-    // Clean up
-    for (float *f : wfData)
-        delete[] f;
-    for (int i = 0; i < nChannelsTot; ++i)
-        hSampleSig[i]->Write("", TObject::kOverwrite);
-
-    // Deleting the pointers to the histos, not the histos themselves
-    delete[] hSampleSig;
-
-    // Return 1 if eof was reached, 0 when nSampleEvents were read
-    return (nEvents < gCONFIG.nSampleEvents);
+    return 0;
 }
 
 /**
@@ -834,6 +825,8 @@ int GetIntegrationBounds(std::ifstream *file)
  */
 int ReadFile(std::ifstream *file)
 {
+    std::cout << "Position at begin of ReadFile: " << file->tellg() << std::endl;
+
     int retVal = 0; ///< The value to be returned
 
     // Initialise the tree
@@ -867,10 +860,6 @@ int ReadFile(std::ifstream *file)
     float *fSineAmplitude = new float[nChannelsTot];
     float *fSinePhase = new float[nChannelsTot];
 
-    // TEST 001: New branch for trigger rate. Implement this by
-    // evaluating something similar to nEvents/elapsedTime.
-    float fTRate = 0; // TRate == T(rigger) Rate
-
     // 3. TTree itself
     TTree *theTree = new TTree("T", "WaveDREAM Tree");
     theTree->SetDirectory(gCONFIG.theFile);
@@ -886,9 +875,6 @@ int ReadFile(std::ifstream *file)
     theTree->Branch("Stdv", fStdv, leaflistDescription.c_str());
     theTree->Branch("Threshold", fThreshold, leaflistDescription.c_str());
 
-    // TEST 001 ------------------------------
-    theTree->Branch("TRate", &fTRate);
-
     if (gCONFIG.subtractSine)
     {
         theTree->Branch("StdvRaw", fStdvRaw, leaflistDescription.c_str());
@@ -902,17 +888,22 @@ int ReadFile(std::ifstream *file)
     // Start the mainloop
     Debug << "Mainloop over the file started " << std::endl;
     EventHeader eh;
-    std::vector<float *> wfData;
-    std::vector<float *> wfTime;
-    wfData.resize(nChannelsTot, 0);
-    wfTime.resize(nChannelsTot, 0);
-    for (int i = 0; i < nChannelsTot; ++i)
+    std::vector<std::vector<float *>> wfData;
+    std::vector<std::vector<float *>> wfTime;
+    std::vector<std::vector<unsigned short>> tCell;
+    for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); board++)
     {
-        wfData.at(i) = new float[SAMPLES_PER_WAVEFORM];
-        wfTime.at(i) = new float[SAMPLES_PER_WAVEFORM];
+        wfData.push_back({});
+        wfTime.push_back({});
+        tCell.push_back({});
+        for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
+        {
+            wfData.at(board).push_back(new float[SAMPLES_PER_WAVEFORM]);
+            wfTime.at(board).push_back(new float[SAMPLES_PER_WAVEFORM]);
+            tCell.at(board).push_back(0);
+        }
     }
-    std::vector<unsigned short> tCell;
-    tCell.resize(nChannelsTot, 0);
+
     float t1, t2, dt;
     int index = 0;
 
@@ -921,10 +912,6 @@ int ReadFile(std::ifstream *file)
     bool isSignal = false;
     int minBin = 0;
     float firstMin = 0;
-
-    // TEST 001 ------------------------------
-    float initTime = 0;
-    float prevTime = 0;
 
     while (not file->eof())
     {
@@ -936,184 +923,180 @@ int ReadFile(std::ifstream *file)
             std::cout << "Processing Event " << eh.serialNumber << std::endl;
         };
 
-        // TEST 001 ------------------------------
-        initTime = getTimeStamp(eh);
-
         // Calculate times for each channel
-        for (int ch = 0; ch < nChannelsTot; ++ch)
+        for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
         {
-            int bin = tCell.at(ch);
-            double time = 0;
-            for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
+            for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
             {
-                wfTime.at(ch)[i] = time;
-                time += gCONFIG.timeBinWidth.at(ch)[bin];
-                ++bin;
-                bin %= 1024;
+                int bin = tCell.at(board).at(ch);
+                double time = 0;
+                for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
+                {
+                    wfTime.at(board).at(ch)[i] = time;
+                    time += gCONFIG.timeBinWidth.at(board).at(ch)[bin];
+                    ++bin;
+                    bin %= 1024;
+                }
             }
         }
 
         // Align cell #0 of all channels
         index = 0;
-        for (int nCh : gCONFIG.nChannelsPerBoard)
+        for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
         {
-            t1 = wfTime.at(index)[(1024 - tCell[index]) % 1024];
+            t1 = wfTime.at(board).at(index)[(1024 - tCell.at(board)[index]) % 1024];
             ++index;
-            for (int ch = 1; ch < nCh; ++ch)
+            for (int ch = 1; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
             {
-                t2 = wfTime.at(index)[(1024 - tCell[index]) % 1024];
+                t2 = wfTime.at(board).at(index)[(1024 - tCell.at(board)[index]) % 1024];
                 dt = t1 - t2;
                 for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
                 {
-                    wfTime.at(index)[i] += dt;
+                    wfTime.at(board).at(index)[i] += dt;
                 }
                 ++index;
             }
         }
 
         // Analysis of individual channels
-        for (int ch = 0; ch < nChannelsTot; ++ch)
+        int nCh = 0;
+        for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
         {
-            float *aWF = wfData.at(ch);
-
-            // Flip waveform if needed -> want a negative one
-            if (gCONFIG.sigWF == 1)
+            for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
             {
-                for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
-                    aWF[i] *= -1;
-                Debug << "Positive Waveform - flipping" << std::endl;
-            }
+                std::cout << board << " " << ch << std::endl;
+                float *aWF = wfData.at(board).at(ch);
+                float *aWFT = wfTime.at(board).at(ch);
 
-            // Subtract sine noise if activated
-            if (gCONFIG.subtractSine)
-            {
-                getPedestal(aWF, ped, stdvRaw);
-                if (eh.serialNumber < gCONFIG.nSaveEvents)
+                // Flip waveform if needed -> want a negative one
+                if (gCONFIG.sigWF == 1)
                 {
-                    char name[32];
-                    sprintf(name, "event%03d_ch%03d_raw", eh.serialNumber, ch);
-                    subtractSineNoise(aWF, wfTime[ch], sinAmpl, phi, name);
+                    for (int i = 0; i < SAMPLES_PER_WAVEFORM; ++i)
+                        aWF[i] *= -1;
+                    Debug << "Positive Waveform - flipping" << std::endl;
+                }
+
+                // Subtract sine noise if activated
+                if (gCONFIG.subtractSine && abs(aWF[0]) != 1.)
+                {
+                    getPedestal(aWF, ped, stdvRaw);
+                    if (eh.serialNumber < gCONFIG.nSaveEvents)
+                    {
+                        char name[32];
+                        sprintf(name, "event%03d_ch%03d_raw", eh.serialNumber, ch);
+                        subtractSineNoise(aWF, aWFT, sinAmpl, phi, name);
+                    }
+                    else
+                    {
+                        subtractSineNoise(aWF, aWFT, sinAmpl, phi);
+                    }
+                }
+
+                // Get the pedestal
+                getPedestal(aWF, ped, stdv);
+
+                // Check for a signal waveform - aka 5 sigma excess
+                // May needs a somewhat less restrictive cut
+                isSignal = false;
+                IntegrationWindow iw = gCONFIG.integrationWindows.at(nCh);
+                for (int i = iw.start; i < iw.stop && not isSignal; ++i)
+                {
+                    if ((ped - aWF[i]) > 5 * stdv)
+                        isSignal = true;
+                }
+
+                // Fill a graph if needed:
+                if (eh.serialNumber < gCONFIG.nSaveEvents && abs(ped) != 1.)
+                {
+                    TGraph *aGraph = new TGraph(SAMPLES_PER_WAVEFORM, aWFT, aWF);
+                    TF1 *pedestal = new TF1("pedestal", "[0]", aWFT[iw.start], aWFT[iw.stop]);
+                    pedestal->SetParameter(0, ped);
+                    aGraph->GetListOfFunctions()->Add(pedestal);
+                    TString name = TString::Format("event%03d_ch%03d", eh.serialNumber, ch);
+                    aGraph->SetName(name);
+                    aGraph->SetTitle(name);
+                    aGraph->Write("", TObject::kOverwrite);
+                }
+                std::cout << "ped:" << ped << "stdv: " << stdv << std::endl;
+                if (isSignal && abs(ped) != 1.)
+                {
+                    // Find peak
+                    ampl = firstMin = 0;
+                    for (int bin = iw.start + 1; bin < iw.stop - 2; ++bin)
+                    {
+                        if (ampl > aWF[bin] - ped)
+                        {
+                            // The maximal amplitude in the intergation window
+                            ampl = aWF[bin] - ped;
+                        }
+                        if (firstMin > -gCONFIG.leThreshold && aWF[bin] < aWF[bin - 1] && aWF[bin] < aWF[bin + 1] && aWF[bin] < aWF[bin + 2])
+                        {
+                            firstMin = aWF[bin] - ped;
+                            minBin = bin;
+                        }
+                    }
+
+                    // CF + LE time extraction
+                    // start at minBin where the first (local) min has been found.
+                    // Then move to earlier times to find the closest crossing.
+                    timeLE = -1e+5;
+                    timeCF = -1e+5;
+                    for (int bin = minBin; bin > iw.start; --bin)
+                    {
+                        // DEBUG << aWF[bin] - ped << "  " << -gCONFIG.leThreshold << " " << gCONFIG.cfFraction * firstMin << std::endl;
+                        // LE
+                        if (timeLE < 0 && aWF[bin] - ped > -gCONFIG.leThreshold)
+                        {
+                            std::cout << "gCONFIG.leThreshold: " << gCONFIG.leThreshold << std::endl;
+                            timeLE = (-gCONFIG.leThreshold - aWF[bin] + ped) / (aWF[bin + 1] - aWF[bin]) * (aWFT[bin + 1] - aWFT[bin]) + aWFT[bin];
+                            std::cout << "ciao ciao" << std::endl;
+                        }
+
+                        // Constant Fraction
+                        if (timeCF < 0 && aWF[bin] - ped > gCONFIG.cfFraction * firstMin)
+                        {
+                            timeCF = (gCONFIG.cfFraction * firstMin - aWF[bin] + ped) / (aWF[bin + 1] - aWF[bin]) * (aWFT[bin + 1] - aWFT[bin]) + aWFT[bin];
+                        }
+                        if (timeCF > 0 && timeLE > 0)
+                            break;
+                    }
+
+                    // Charge Integration
+                    area = 0;
+                    area2 = 0;
+                    for (int bin = iw.start; bin < iw.stop; ++bin)
+                    {
+                        area += ped - aWF[bin];
+                        area2 += (ped - aWF[bin]) * gCONFIG.timeBinWidth.at(board).at(ch)[(tCell.at(board).at(ch) + bin) % 1024];
+                    }
                 }
                 else
                 {
-                    subtractSineNoise(aWF, wfTime[ch], sinAmpl, phi);
+                    timeCF = -1e5;
+                    timeLE = -1e5;
+                    ampl = 0;
+                    area = 0;
+                    area2 = 0;
+                    thr = 0;
                 }
+                DEBUG << ch << "/" << nChannelsTot << std::endl;
+                fEvent = eh.serialNumber;
+                fTimestamp = getTimeStamp(eh);
+                fTime[nCh] = timeCF;
+                fTimeLE[nCh] = timeLE;
+                fAmplitude[nCh] = -ampl; // prefer a positive amplitude in the end;
+                fArea[nCh] = area;
+                fArea2[nCh] = area2;
+                fPed[nCh] = ped;
+                fStdv[nCh] = stdv;
+                fThreshold[nCh] = thr;
+                fStdvRaw[nCh] = stdvRaw;
+                fSineAmplitude[nCh] = sinAmpl;
+                fSinePhase[nCh] = phi;
+                nCh++;
             }
-
-            // Get the pedestal
-            getPedestal(aWF, ped, stdv);
-
-            // Check for a signal waveform - aka 5 sigma excess
-            // May needs a somewhat less restrictive cut
-            isSignal = false;
-            IntegrationWindow iw = gCONFIG.integrationWindows.at(ch);
-            for (int i = iw.start; i < iw.stop && not isSignal; ++i)
-            {
-                if ((ped - aWF[i]) > 5 * stdv)
-                    isSignal = true;
-            }
-
-            // Fill a graph if needed:
-            if (eh.serialNumber < gCONFIG.nSaveEvents)
-            {
-                TGraph *aGraph = new TGraph(SAMPLES_PER_WAVEFORM, wfTime[ch], aWF);
-                TF1 *pedestal = new TF1("pedestal", "[0]", wfTime[ch][iw.start], wfTime[ch][iw.stop]);
-                pedestal->SetParameter(0, ped);
-                aGraph->GetListOfFunctions()->Add(pedestal);
-                TString name = TString::Format("event%03d_ch%03d", eh.serialNumber, ch);
-                aGraph->SetName(name);
-                aGraph->SetTitle(name);
-                aGraph->Write("", TObject::kOverwrite);
-            }
-            if (isSignal)
-            {
-                // Find peak
-                ampl = firstMin = 0;
-                for (int bin = iw.start + 1; bin < iw.stop - 2; ++bin)
-                {
-                    if (ampl > aWF[bin] - ped)
-                    {
-                        // The maximal amplitude in the intergation window
-                        ampl = aWF[bin] - ped;
-                    }
-                    if (firstMin > -gCONFIG.leThreshold && aWF[bin] < aWF[bin - 1] && aWF[bin] < aWF[bin + 1] && aWF[bin] < aWF[bin + 2])
-                    {
-                        firstMin = aWF[bin] - ped;
-                        minBin = bin;
-                    }
-                }
-
-                // CF + LE time extraction
-                // start at minBin where the first (local) min has been found.
-                // Then move to earlier times to find the closest crossing.
-                timeLE = -1e+5;
-                timeCF = -1e+5;
-                for (int bin = minBin; bin > iw.start; --bin)
-                {
-                    // DEBUG << aWF[bin] - ped << "  " << -gCONFIG.leThreshold << " " << gCONFIG.cfFraction * firstMin << std::endl;
-                    // LE
-                    if (timeLE < 0 && aWF[bin] - ped > -gCONFIG.leThreshold)
-                    {
-                        timeLE = (-gCONFIG.leThreshold - aWF[bin] + ped) / (aWF[bin + 1] - aWF[bin]) * (wfTime[ch][bin + 1] - wfTime[ch][bin]) + wfTime[ch][bin];
-                    }
-
-                    // Constant Fraction
-                    if (timeCF < 0 && aWF[bin] - ped > gCONFIG.cfFraction * firstMin)
-                    {
-                        timeCF = (gCONFIG.cfFraction * firstMin - aWF[bin] + ped) / (aWF[bin + 1] - aWF[bin]) * (wfTime[ch][bin + 1] - wfTime[ch][bin]) + wfTime[ch][bin];
-                    }
-                    if (timeCF > 0 && timeLE > 0)
-                        break;
-                }
-
-                // Charge Integration
-                area = 0;
-                area2 = 0;
-                for (int bin = iw.start; bin < iw.stop; ++bin)
-                {
-                    area += ped - aWF[bin];
-                    area2 += (ped - aWF[bin]) * gCONFIG.timeBinWidth[ch][(tCell[ch] + bin) % 1024];
-                }
-            }
-            else
-            {
-                timeCF = -1e5;
-                timeLE = -1e5;
-                ampl = 0;
-                area = 0;
-                area2 = 0;
-                thr = 0;
-            }
-            DEBUG << ch << "/" << nChannelsTot << std::endl;
-            fEvent = eh.serialNumber;
-            fTimestamp = getTimeStamp(eh);
-            fTime[ch] = timeCF;
-            fTimeLE[ch] = timeLE;
-            fAmplitude[ch] = -ampl; // prefer a positive amplitude in the end;
-            fArea[ch] = area;
-            fArea2[ch] = area2;
-            fPed[ch] = ped;
-            fStdv[ch] = stdv;
-            fThreshold[ch] = thr;
-            fStdvRaw[ch] = stdvRaw;
-            fSineAmplitude[ch] = sinAmpl;
-            fSinePhase[ch] = phi;
+            theTree->Fill();
         }
-
-        // TEST 001 ------------------------------
-        if (prevTime != initTime)
-        {
-            fTRate = 1 / (initTime - prevTime);
-        }
-        else
-        {
-            fTRate = 0;
-        }
-
-        theTree->Fill();
-
-        // TEST 001 ------------------------------
-        prevTime = initTime;
     }
 
     // Clean up at the end of the file
@@ -1130,8 +1113,11 @@ int ReadFile(std::ifstream *file)
     delete[] fStdvRaw;
     delete[] fSineAmplitude;
     delete[] fSinePhase;
-    for (float *f : wfData)
-        delete[] f;
+    for (int board = 0; board < gCONFIG.nChannelsPerBoard.size(); ++board)
+    {
+        for (float *f : wfData.at(board))
+            delete[] f;
+    }
     return 0;
 }
 
@@ -1437,7 +1423,7 @@ void PrintHelp()
 }
 
 /**
- * @brief
+ * @brief Main function
  *
  * @param argc
  * @param argv
@@ -1573,8 +1559,8 @@ int main(int argc, const char **argv)
         // Check accessibility of the output file:
         if (!overwrite && !gSystem->AccessPathName(outFileName.c_str()))
         {
-            std::cout << "The file " << outFileName << "already exists. \n";
-            std::cout << "Use the -f flag to force overwriting existing files" << std::endl;
+            std::cout << "The file " << outFileName << " already exists.\n";
+            std::cout << "Use the -f flag to force overwriting existing files." << std::endl;
             continue; // The file already exists and may not be overwritten.
         }
 
@@ -1592,12 +1578,13 @@ int main(int argc, const char **argv)
         {
             // For some reason, the file could not be opened.
             std::cerr << "Could not open file " << outFileName.c_str() << std::endl;
-            Debug << "... cleaning up" << std::endl;
+            Debug << "... cleaning up." << std::endl;
             inFile->close();
             delete inFile;
             for (unsigned int board = 0; board < gCONFIG.timeBinWidth.size(); ++board)
             {
-                delete[] gCONFIG.timeBinWidth.at(board);
+                for (float *arr : gCONFIG.timeBinWidth.at(board))
+                    delete[] arr;
             }
             continue;
         }
@@ -1620,7 +1607,8 @@ int main(int argc, const char **argv)
         inFile->close();
         for (unsigned int board = 0; board < gCONFIG.timeBinWidth.size(); ++board)
         {
-            delete[] gCONFIG.timeBinWidth.at(board);
+            for (float *arr : gCONFIG.timeBinWidth.at(board))
+                delete[] arr;
         }
         delete inFile;
     }
