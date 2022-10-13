@@ -129,9 +129,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a09257ca91db792759c5224419b23cc9d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="read_w_d_8cpp.html#a09257ca91db792759c5224419b23cc9d">GetIntegrationBounds</a> (std::ifstream *file)</td></tr>
 <tr class="memdesc:a09257ca91db792759c5224419b23cc9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Integration Bounds object.  <a href="read_w_d_8cpp.html#a09257ca91db792759c5224419b23cc9d">More...</a><br /></td></tr>
 <tr class="separator:a09257ca91db792759c5224419b23cc9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad49bebee842513873f1db95b0a853182"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="read_w_d_8cpp.html#ad49bebee842513873f1db95b0a853182">ReadAnEvent</a> (std::ifstream *file, <a class="el" href="struct_event_header.html">EventHeader</a> &amp;eh, std::vector&lt; float * &gt; &amp;wfData, std::vector&lt; unsigned short &gt; *tCell)</td></tr>
-<tr class="memdesc:ad49bebee842513873f1db95b0a853182"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads an event.  <a href="read_w_d_8cpp.html#ad49bebee842513873f1db95b0a853182">More...</a><br /></td></tr>
-<tr class="separator:ad49bebee842513873f1db95b0a853182"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a828cb20d5b1f4d51d5a7add0034e18b8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="read_w_d_8cpp.html#a828cb20d5b1f4d51d5a7add0034e18b8">ReadAnEvent</a> (std::ifstream *file, <a class="el" href="struct_event_header.html">EventHeader</a> &amp;eh, std::vector&lt; std::vector&lt; float * &gt; &gt; &amp;wfData, std::vector&lt; std::vector&lt; unsigned short &gt; &gt; *tCell)</td></tr>
+<tr class="memdesc:a828cb20d5b1f4d51d5a7add0034e18b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads an event.  <a href="read_w_d_8cpp.html#a828cb20d5b1f4d51d5a7add0034e18b8">More...</a><br /></td></tr>
+<tr class="separator:a828cb20d5b1f4d51d5a7add0034e18b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a511ed327799fe646436e3cff99374eea"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="read_w_d_8cpp.html#a511ed327799fe646436e3cff99374eea">ReadFile</a> (std::ifstream *file)</td></tr>
 <tr class="memdesc:a511ed327799fe646436e3cff99374eea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the whole file.  <a href="read_w_d_8cpp.html#a511ed327799fe646436e3cff99374eea">More...</a><br /></td></tr>
 <tr class="separator:a511ed327799fe646436e3cff99374eea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,6 +152,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:a0131d0d01bce5872bc9e5491fd3af25e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the timestamp.  <a href="read_w_d_8cpp.html#a0131d0d01bce5872bc9e5491fd3af25e">More...</a><br /></td></tr>
 <tr class="separator:a0131d0d01bce5872bc9e5491fd3af25e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a217dbf8b442f20279ea00b898af96f52"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="read_w_d_8cpp.html#a217dbf8b442f20279ea00b898af96f52">main</a> (int argc, const char **argv)</td></tr>
+<tr class="memdesc:a217dbf8b442f20279ea00b898af96f52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main function.  <a href="read_w_d_8cpp.html#a217dbf8b442f20279ea00b898af96f52">More...</a><br /></td></tr>
 <tr class="separator:a217dbf8b442f20279ea00b898af96f52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
@@ -189,10 +190,10 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">if</span> (<a class="code hl_variable" href="read_w_d_8cpp.html#a08c730d34942f4bbea859090bf60095b">gCONFIG</a>.<a class="code hl_variable" href="struct_configuration.html#ac2516b26c0db951e07f2d5c29ce6a5b0">debug</a>) \</div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;DEBUG L&quot;</span> &lt;&lt; __LINE__ &lt;&lt; <span class="stringliteral">&quot;: &quot;</span></div>
-<div class="ttc" id="aread_w_d_8cpp_html_a08c730d34942f4bbea859090bf60095b"><div class="ttname"><a href="read_w_d_8cpp.html#a08c730d34942f4bbea859090bf60095b">gCONFIG</a></div><div class="ttdeci">Configuration gCONFIG</div><div class="ttdef"><b>Definition:</b> <a href="read_w_d_8cpp_source.html#l00207">readWD.cpp:207</a></div></div>
+<div class="ttc" id="aread_w_d_8cpp_html_a08c730d34942f4bbea859090bf60095b"><div class="ttname"><a href="read_w_d_8cpp.html#a08c730d34942f4bbea859090bf60095b">gCONFIG</a></div><div class="ttdeci">Configuration gCONFIG</div><div class="ttdef"><b>Definition:</b> <a href="read_w_d_8cpp_source.html#l00206">readWD.cpp:206</a></div></div>
 <div class="ttc" id="astruct_configuration_html_ac2516b26c0db951e07f2d5c29ce6a5b0"><div class="ttname"><a href="struct_configuration.html#ac2516b26c0db951e07f2d5c29ce6a5b0">Configuration::debug</a></div><div class="ttdeci">short debug</div><div class="ttdef"><b>Definition:</b> <a href="read_w_d_8cpp_source.html#l00129">readWD.cpp:129</a></div></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00208">208</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00207">207</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
 </div>
 </div>
@@ -210,7 +211,7 @@ Variables</h2></td></tr>
 <b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">if</span> (<a class="code hl_variable" href="read_w_d_8cpp.html#a08c730d34942f4bbea859090bf60095b">gCONFIG</a>.<a class="code hl_variable" href="struct_configuration.html#ac2516b26c0db951e07f2d5c29ce6a5b0">debug</a> &gt; 1) \</div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;DEBUG L&quot;</span> &lt;&lt; __LINE__ &lt;&lt; <span class="stringliteral">&quot;: &quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00211">211</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00210">210</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
 </div>
 </div>
@@ -226,7 +227,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00214">214</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00213">213</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
 </div>
 </div>
@@ -247,11 +248,11 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>int </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l01143">1143</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l01129">1129</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00033">__READ_VERSION__</a>, <a class="el" href="read_w_d_8cpp_source.html#l00149">Configuration::cfFraction</a>, <a class="el" href="read_w_d_8cpp_source.html#l00129">Configuration::debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00141">Configuration::intDecay</a>, <a class="el" href="read_w_d_8cpp_source.html#l00139">Configuration::intRise</a>, <a class="el" href="read_w_d_8cpp_source.html#l00151">Configuration::leThreshold</a>, <a class="el" href="read_w_d_8cpp_source.html#l00135">Configuration::noiseFrequency</a>, <a class="el" href="read_w_d_8cpp_source.html#l00145">Configuration::nSampleEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00147">Configuration::nSaveEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00131">Configuration::sigWF</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00133">Configuration::subtractSine</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00033">__READ_VERSION__</a>, <a class="el" href="read_w_d_8cpp_source.html#l00149">Configuration::cfFraction</a>, <a class="el" href="read_w_d_8cpp_source.html#l00129">Configuration::debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00141">Configuration::intDecay</a>, <a class="el" href="read_w_d_8cpp_source.html#l00139">Configuration::intRise</a>, <a class="el" href="read_w_d_8cpp_source.html#l00151">Configuration::leThreshold</a>, <a class="el" href="read_w_d_8cpp_source.html#l00135">Configuration::noiseFrequency</a>, <a class="el" href="read_w_d_8cpp_source.html#l00145">Configuration::nSampleEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00147">Configuration::nSaveEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00131">Configuration::sigWF</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00133">Configuration::subtractSine</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01446">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01432">main()</a>.</p>
 
 </div>
 </div>
@@ -280,11 +281,11 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>int </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00692">692</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00498">498</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00208">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00241">getPedestal()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00141">Configuration::intDecay</a>, <a class="el" href="read_w_d_8cpp_source.html#l00155">Configuration::integrationWindows</a>, <a class="el" href="read_w_d_8cpp_source.html#l00139">Configuration::intRise</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00145">Configuration::nSampleEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00396">ReadAnEvent()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00214">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00114">IntegrationWindow::start</a>, <a class="el" href="read_w_d_8cpp_source.html#l00115">IntegrationWindow::stop</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00159">Configuration::theFile</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00207">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00240">getPedestal()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00141">Configuration::intDecay</a>, <a class="el" href="read_w_d_8cpp_source.html#l00155">Configuration::integrationWindows</a>, <a class="el" href="read_w_d_8cpp_source.html#l00139">Configuration::intRise</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00145">Configuration::nSampleEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00662">ReadAnEvent()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00213">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00114">IntegrationWindow::start</a>, <a class="el" href="read_w_d_8cpp_source.html#l00115">IntegrationWindow::stop</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00159">Configuration::theFile</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01446">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01432">main()</a>.</p>
 
 </div>
 </div>
@@ -331,9 +332,9 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00241">241</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00240">240</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00692">GetIntegrationBounds()</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00835">ReadFile()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00498">GetIntegrationBounds()</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00826">ReadFile()</a>.</p>
 
 </div>
 </div>
@@ -380,7 +381,7 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00269">269</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00268">268</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
 </div>
 </div>
@@ -410,11 +411,11 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns the timestamp </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00367">367</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00366">366</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
 <p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00098">EventHeader::day</a>, <a class="el" href="read_w_d_8cpp_source.html#l00099">EventHeader::hour</a>, <a class="el" href="read_w_d_8cpp_source.html#l00100">EventHeader::min</a>, <a class="el" href="read_w_d_8cpp_source.html#l00102">EventHeader::ms</a>, <a class="el" href="read_w_d_8cpp_source.html#l00101">EventHeader::sec</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00095">EventHeader::serialNumber</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00835">ReadFile()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00826">ReadFile()</a>.</p>
 
 </div>
 </div>
@@ -441,11 +442,11 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>std::ifstream* </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00541">541</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00390">390</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00208">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00127">Configuration::firstOfRun</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00155">Configuration::integrationWindows</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00137">Configuration::runMode</a>, <a class="el" href="read_w_d_8cpp_source.html#l00214">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00072">FileHeader::tag</a>, <a class="el" href="read_w_d_8cpp_source.html#l00094">EventHeader::tag</a>, <a class="el" href="read_w_d_8cpp_source.html#l00157">Configuration::timeBinWidth</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00073">FileHeader::version</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00207">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00127">Configuration::firstOfRun</a>, <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00155">Configuration::integrationWindows</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00137">Configuration::runMode</a>, <a class="el" href="read_w_d_8cpp_source.html#l00213">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00072">FileHeader::tag</a>, <a class="el" href="read_w_d_8cpp_source.html#l00157">Configuration::timeBinWidth</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00073">FileHeader::version</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01446">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01432">main()</a>.</p>
 
 </div>
 </div>
@@ -474,6 +475,8 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Main function. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">argc</td><td></td></tr>
@@ -483,9 +486,9 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>int </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l01446">1446</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l01432">1432</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00033">__READ_VERSION__</a>, <a class="el" href="read_w_d_8cpp_source.html#l01143">Config()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00129">Configuration::debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00208">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00692">GetIntegrationBounds()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00541">Initialise()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00145">Configuration::nSampleEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l01421">PrintHelp()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00835">ReadFile()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00143">Configuration::run</a>, <a class="el" href="read_w_d_8cpp_source.html#l00131">Configuration::sigWF</a>, <a class="el" href="read_w_d_8cpp_source.html#l00133">Configuration::subtractSine</a>, <a class="el" href="read_w_d_8cpp_source.html#l00159">Configuration::theFile</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00157">Configuration::timeBinWidth</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00033">__READ_VERSION__</a>, <a class="el" href="read_w_d_8cpp_source.html#l01129">Config()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00129">Configuration::debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00498">GetIntegrationBounds()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00390">Initialise()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00145">Configuration::nSampleEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l01407">PrintHelp()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00826">ReadFile()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00143">Configuration::run</a>, <a class="el" href="read_w_d_8cpp_source.html#l00131">Configuration::sigWF</a>, <a class="el" href="read_w_d_8cpp_source.html#l00133">Configuration::subtractSine</a>, <a class="el" href="read_w_d_8cpp_source.html#l00159">Configuration::theFile</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00157">Configuration::timeBinWidth</a>.</p>
 
 </div>
 </div>
@@ -504,14 +507,14 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l01421">1421</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l01407">1407</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01446">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01432">main()</a>.</p>
 
 </div>
 </div>
-<a id="ad49bebee842513873f1db95b0a853182" name="ad49bebee842513873f1db95b0a853182"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad49bebee842513873f1db95b0a853182">&#9670;&nbsp;</a></span>ReadAnEvent()</h2>
+<a id="a828cb20d5b1f4d51d5a7add0034e18b8" name="a828cb20d5b1f4d51d5a7add0034e18b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a828cb20d5b1f4d51d5a7add0034e18b8">&#9670;&nbsp;</a></span>ReadAnEvent()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -531,13 +534,13 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; float * &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; float * &gt; &gt; &amp;&#160;</td>
           <td class="paramname"><em>wfData</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; unsigned short &gt; *&#160;</td>
+          <td class="paramtype">std::vector&lt; std::vector&lt; unsigned short &gt; &gt; *&#160;</td>
           <td class="paramname"><em>tCell</em>&#160;</td>
         </tr>
         <tr>
@@ -561,11 +564,11 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, 1 for EOF, 2 otherwise </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00396">396</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00662">662</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00211">DEBUG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00127">Configuration::firstOfRun</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00103">EventHeader::rangeCenter</a>, <a class="el" href="read_w_d_8cpp_source.html#l00137">Configuration::runMode</a>, <a class="el" href="read_w_d_8cpp_source.html#l00214">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00095">EventHeader::serialNumber</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00094">EventHeader::tag</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00210">DEBUG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00127">Configuration::firstOfRun</a>, <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00103">EventHeader::rangeCenter</a>, <a class="el" href="read_w_d_8cpp_source.html#l00137">Configuration::runMode</a>, <a class="el" href="read_w_d_8cpp_source.html#l00213">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00095">EventHeader::serialNumber</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00094">EventHeader::tag</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00692">GetIntegrationBounds()</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00835">ReadFile()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00498">GetIntegrationBounds()</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00826">ReadFile()</a>.</p>
 
 </div>
 </div>
@@ -596,11 +599,11 @@ Variables</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, 1 otherwise </dd></dl>
 <p >&lt; The value to be returned</p>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00835">835</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00826">826</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00149">Configuration::cfFraction</a>, <a class="el" href="read_w_d_8cpp_source.html#l00129">Configuration::debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00208">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00211">DEBUG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00241">getPedestal()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00367">getTimeStamp()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00155">Configuration::integrationWindows</a>, <a class="el" href="read_w_d_8cpp_source.html#l00151">Configuration::leThreshold</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00147">Configuration::nSaveEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00396">ReadAnEvent()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00143">Configuration::run</a>, <a class="el" href="read_w_d_8cpp_source.html#l00214">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00095">EventHeader::serialNumber</a>, <a class="el" href="read_w_d_8cpp_source.html#l00131">Configuration::sigWF</a>, <a class="el" href="read_w_d_8cpp_source.html#l00114">IntegrationWindow::start</a>, <a class="el" href="read_w_d_8cpp_source.html#l00115">IntegrationWindow::stop</a>, <a class="el" href="read_w_d_8cpp_source.html#l00133">Configuration::subtractSine</a>, <a class="el" href="read_w_d_8cpp_source.html#l00316">subtractSineNoise()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00159">Configuration::theFile</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00157">Configuration::timeBinWidth</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00149">Configuration::cfFraction</a>, <a class="el" href="read_w_d_8cpp_source.html#l00129">Configuration::debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00207">Debug</a>, <a class="el" href="read_w_d_8cpp_source.html#l00210">DEBUG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00240">getPedestal()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00366">getTimeStamp()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00155">Configuration::integrationWindows</a>, <a class="el" href="read_w_d_8cpp_source.html#l00151">Configuration::leThreshold</a>, <a class="el" href="read_w_d_8cpp_source.html#l00153">Configuration::nChannelsPerBoard</a>, <a class="el" href="read_w_d_8cpp_source.html#l00147">Configuration::nSaveEvents</a>, <a class="el" href="read_w_d_8cpp_source.html#l00662">ReadAnEvent()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00143">Configuration::run</a>, <a class="el" href="read_w_d_8cpp_source.html#l00213">SAMPLES_PER_WAVEFORM</a>, <a class="el" href="read_w_d_8cpp_source.html#l00095">EventHeader::serialNumber</a>, <a class="el" href="read_w_d_8cpp_source.html#l00131">Configuration::sigWF</a>, <a class="el" href="read_w_d_8cpp_source.html#l00114">IntegrationWindow::start</a>, <a class="el" href="read_w_d_8cpp_source.html#l00115">IntegrationWindow::stop</a>, <a class="el" href="read_w_d_8cpp_source.html#l00133">Configuration::subtractSine</a>, <a class="el" href="read_w_d_8cpp_source.html#l00315">subtractSineNoise()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00159">Configuration::theFile</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00157">Configuration::timeBinWidth</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01446">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01432">main()</a>.</p>
 
 </div>
 </div>
@@ -661,11 +664,11 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00316">316</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00315">315</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00207">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00135">Configuration::noiseFrequency</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00214">SAMPLES_PER_WAVEFORM</a>.</p>
+<p class="reference">References <a class="el" href="read_w_d_8cpp_source.html#l00206">gCONFIG</a>, <a class="el" href="read_w_d_8cpp_source.html#l00135">Configuration::noiseFrequency</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00213">SAMPLES_PER_WAVEFORM</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00835">ReadFile()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l00826">ReadFile()</a>.</p>
 
 </div>
 </div>
@@ -682,9 +685,9 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00207">207</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="read_w_d_8cpp_source.html#l00206">206</a> of file <a class="el" href="read_w_d_8cpp_source.html">readWD.cpp</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01143">Config()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00692">GetIntegrationBounds()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00541">Initialise()</a>, <a class="el" href="read_w_d_8cpp_source.html#l01446">main()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00396">ReadAnEvent()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00835">ReadFile()</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00316">subtractSineNoise()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="read_w_d_8cpp_source.html#l01129">Config()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00498">GetIntegrationBounds()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00390">Initialise()</a>, <a class="el" href="read_w_d_8cpp_source.html#l01432">main()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00662">ReadAnEvent()</a>, <a class="el" href="read_w_d_8cpp_source.html#l00826">ReadFile()</a>, and <a class="el" href="read_w_d_8cpp_source.html#l00315">subtractSineNoise()</a>.</p>
 
 </div>
 </div>
