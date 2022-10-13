@@ -535,7 +535,6 @@ int GetIntegrationBounds(std::ifstream *file)
     float pedStdv = 0;
     unsigned int nEvents = 0;
     int retVal = 0;
-    std::cout << "Position at begin of GetIntegrationBounds: " << file->tellg() << std::endl;
     int curPos = file->tellg();
     while (nEvents < gCONFIG.nSampleEvents && !file->eof())
     {
@@ -554,8 +553,6 @@ int GetIntegrationBounds(std::ifstream *file)
             }
         }
     }
-
-    std::cout << "GIB while cycle passed" << std::endl;
 
     if (retVal < 2)
     {
@@ -762,7 +759,6 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<std::vector<fl
             if (curPos + sizeof(float) * SAMPLES_PER_WAVEFORM < file->end)
             {
                 file->read(word, 4);
-                file->seekg(-4, file->cur);
             }
         }
     }
@@ -827,8 +823,6 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<std::vector<fl
  */
 int ReadFile(std::ifstream *file)
 {
-    std::cout << "Position at begin of ReadFile: " << file->tellg() << std::endl;
-
     int retVal = 0; ///< The value to be returned
 
     // Initialise the tree
@@ -966,7 +960,6 @@ int ReadFile(std::ifstream *file)
         {
             for (int ch = 0; ch < gCONFIG.nChannelsPerBoard.at(board); ++ch)
             {
-                std::cout << board << " " << ch << std::endl;
                 float *aWF = wfData.at(board).at(ch);
                 float *aWFT = wfTime.at(board).at(ch);
 
