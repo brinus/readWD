@@ -553,7 +553,6 @@ int GetIntegrationBounds(std::ifstream *file)
             }
         }
     }
-
     if (retVal < 2)
     {
         float peak, stdv, tau;
@@ -751,12 +750,12 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<std::vector<fl
             // Read voltages from file
             int curPos = file->tellg();
             file->read((char *)voltages, sizeof(voltages));
-
+            std::cout << index << std::endl;
             for (int bin = 0; bin < SAMPLES_PER_WAVEFORM; ++bin)
             {
                 wfData.at(board).at(index)[bin] = (voltages[bin] / 65536. + eh.rangeCenter / 1000. - 0.5);
             }
-            if (curPos + sizeof(float) * SAMPLES_PER_WAVEFORM < file->end)
+            if (!file->eof())
             {
                 file->read(word, 4);
             }
@@ -808,7 +807,7 @@ int ReadAnEvent(std::ifstream *file, EventHeader &eh, std::vector<std::vector<fl
         DEBUG << "File is at its end: " << file->tellg() << "/" << lastPos << "   Event Size: " << eventSize << std::endl;
         return 1;
     }
-
+    file->seekg(-4, file->cur);
     return 0;
 }
 
